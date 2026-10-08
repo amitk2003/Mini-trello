@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-TaskTrackerApplication<tasktracker>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.minitrello.tasktracker.TaskTrackerApplication",
+            "projectName": "tasktracker",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

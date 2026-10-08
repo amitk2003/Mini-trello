@@ -1,9 +1,9 @@
 package com.minitrello.tasktracker.controller;
 
+import com.minitrello.tasktracker.dto.TaskStatsDto;
 import com.minitrello.tasktracker.entity.Task;
 import com.minitrello.tasktracker.service.TaskService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,23 +18,37 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/tasks")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:4173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"})
 public class TaskController {
 
     private final TaskService taskService;
 
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
+    }
+
     /**
-     * GET /api/tasks - Retrieve all tasks, with optional status filter.
+     * GET /api/tasks - Retrieve all tasks, with optional status and board filter.
      *
-     * @param status optional query param to filter tasks by status
+     * @param boardId optional query param to filter tasks by board
+     * @param status  optional query param to filter tasks by status
      * @return list of tasks wrapped in ResponseEntity
      */
     @GetMapping
     public ResponseEntity<List<Task>> getAllTasks(
+            @RequestParam(required = false) Long boardId,
             @RequestParam(required = false) Task.TaskStatus status) {
-        List<Task> tasks = taskService.getAllTasks(status);
+        List<Task> tasks = taskService.getAllTasks(boardId, status);
         return ResponseEntity.ok(tasks);
+    }
+
+    /**
+     * GET /api/tasks/stats - Retrieve aggregated task statistics (pending, in-progress, completed, overdue, total).
+     */
+    @GetMapping("/stats")
+    public ResponseEntity<TaskStatsDto> getTaskStats(@RequestParam(required = false) Long boardId) {
+        TaskStatsDto stats = taskService.getTaskStats(boardId);
+        return ResponseEntity.ok(stats);
     }
 
     /**
@@ -77,6 +91,21 @@ public class TaskController {
     }
 
     /**
+     * PATCH /api/tasks/{id}/status - Quick update task status.
+     *
+     * @param id     the task ID
+     * @param status the new status
+     * @return the updated task
+     */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Task> updateTaskStatus(
+            @PathVariable Long id,
+            @RequestParam Task.TaskStatus status) {
+        Task updated = taskService.updateTaskStatus(id, status);
+        return ResponseEntity.ok(updated);
+    }
+
+    /**
      * DELETE /api/tasks/{id} - Delete a task by ID.
      *
      * @param id the task ID
@@ -99,8 +128,11 @@ public class TaskController {
      * @return list of matching tasks
      */
     @GetMapping("/search")
-    public ResponseEntity<List<Task>> searchTasks(@RequestParam String keyword) {
-        List<Task> tasks = taskService.searchTasks(keyword);
+    public ResponseEntity<List<Task>> searchTasks(
+            @RequestParam(required = false) Long boardId,
+            @RequestParam String keyword) {
+        List<Task> tasks = taskService.searchTasks(boardId, keyword);
         return ResponseEntity.ok(tasks);
     }
 }
+

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { createTask, updateTask } from '../api/taskApi';
+import { useState, useEffect } from 'react';
+import { createTask, updateTask, getAllBoards } from '../api/taskApi';
 import './TaskForm.css';
 
 const STATUS_OPTIONS = [
@@ -8,27 +8,54 @@ const STATUS_OPTIONS = [
   { value: 'COMPLETED', label: '✅ Completed' },
 ];
 
+const PRIORITY_OPTIONS = [
+  { value: 'LOW', label: '🟢 Low Priority' },
+  { value: 'MEDIUM', label: '🟡 Medium Priority' },
+  { value: 'HIGH', label: '🟠 High Priority' },
+  { value: 'URGENT', label: '🔴 Urgent' },
+];
+
 /**
  * TaskForm – modal dialog for creating or editing a task.
  *
  * Props:
  *  - task (object|null): if provided, pre-fills form for editing
+ *  - defaultBoardId (number|null): preselected board if creating new task
  *  - onClose (fn): called when the modal is dismissed
  *  - onSave (fn): called after a successful save with the saved task
  */
-export default function TaskForm({ task, onClose, onSave }) {
+export default function TaskForm({ task, defaultBoardId, onClose, onSave }) {
   const isEditing = Boolean(task?.id);
 
+  const [boards, setBoards] = useState([]);
   const [formData, setFormData] = useState({
     title: task?.title || '',
     description: task?.description || '',
     status: task?.status || 'PENDING',
+    priority: task?.priority || 'MEDIUM',
+    boardId: task?.board?.id || defaultBoardId || '',
     dueDate: task?.dueDate ? task.dueDate.substring(0, 16) : '',
+    tags: task?.tags ? Array.from(task.tags).join(', ') : '',
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+
+  // Fetch available boards for selection
+  useEffect(() => {
+    getAllBoards()
+      .then((res) => {
+        setBoards(res.data);
+        if (!formData.boardId && res.data.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            boardId: defaultBoardId || res.data[0].id,
+          }));
+        }
+      })
+      .catch((err) => console.error('Failed to load boards for task form', err));
+  }, [defaultBoardId, formData.boardId]);
 
   // ─── Validation ───────────────────────────────────────────────
   const validate = () => {
@@ -62,12 +89,25 @@ export default function TaskForm({ task, onClose, onSave }) {
 
     setLoading(true);
     try {
+      const parsedTags = formData.tags
+        ? formData.tags
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [];
+
       const payload = {
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         status: formData.status,
+        priority: formData.priority,
         dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
+        tags: parsedTags,
       };
+
+      if (formData.boardId) {
+        payload.board = { id: Number(formData.boardId) };
+      }
 
       let response;
       if (isEditing) {
@@ -89,18 +129,13 @@ export default function TaskForm({ task, onClose, onSave }) {
     }
   };
 
-  // ─── Close on overlay click ───────────────────────────────────
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
-  };
-
   return (
     <div
       className="modal-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="task-form-title"
-      onClick={handleOverlayClick}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="modal-card">
         {/* Header */}
@@ -127,6 +162,28 @@ export default function TaskForm({ task, onClose, onSave }) {
 
         {/* Form */}
         <form className="task-form" onSubmit={handleSubmit} noValidate>
+          {/* Board Selector */}
+          {boards.length > 0 && (
+            <div className="form-group">
+              <label className="form-label" htmlFor="boardId">
+                Board
+              </label>
+              <select
+                id="boardId"
+                name="boardId"
+                className="form-select"
+                value={formData.boardId}
+                onChange={handleChange}
+              >
+                {boards.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Title */}
           <div className="form-group">
             <label className="form-label" htmlFor="title">
@@ -137,7 +194,7 @@ export default function TaskForm({ task, onClose, onSave }) {
               name="title"
               type="text"
               className={`form-input ${errors.title ? 'error' : ''}`}
-              placeholder="e.g. Design the login page"
+              placeholder="e.g. Implement authentication filter"
               value={formData.title}
               onChange={handleChange}
               autoFocus
@@ -171,7 +228,7 @@ export default function TaskForm({ task, onClose, onSave }) {
             )}
           </div>
 
-          {/* Status + Due Date row */}
+          {/* Status + Priority row */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
               <label className="form-label" htmlFor="status">Status</label>
@@ -191,6 +248,26 @@ export default function TaskForm({ task, onClose, onSave }) {
             </div>
 
             <div className="form-group">
+              <label className="form-label" htmlFor="priority">Priority</label>
+              <select
+                id="priority"
+                name="priority"
+                className="form-select"
+                value={formData.priority}
+                onChange={handleChange}
+              >
+                {PRIORITY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Due Date + Tags row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="dueDate">Due Date</label>
               <input
                 id="dueDate"
@@ -198,6 +275,19 @@ export default function TaskForm({ task, onClose, onSave }) {
                 type="datetime-local"
                 className="form-input"
                 value={formData.dueDate}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="tags">Tags (comma separated)</label>
+              <input
+                id="tags"
+                name="tags"
+                type="text"
+                className="form-input"
+                placeholder="e.g. Backend, API, Docs"
+                value={formData.tags}
                 onChange={handleChange}
               />
             </div>

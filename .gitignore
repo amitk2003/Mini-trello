@@ -1,0 +1,19 @@
+# Build artifacts
+**/target/
+**/dist/
+**/node_modules/
+
+# IDE files
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+
+# Maven wrapper cache
+backend/.maven/
+
+# Temp & OS
+*.log
+.DS_Store
+Thumbs.db

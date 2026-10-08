@@ -43,7 +43,7 @@ npm install       # (already done if you followed setup)
 npm run dev
 ```
 
-Frontend starts on **http://localhost:5173**
+Frontend starts on **http://localhost:3000** (or **http://localhost:5173** if 3000 is occupied)
 
 ---
 
@@ -51,13 +51,20 @@ Frontend starts on **http://localhost:5173**
 
 | Method | URL | Description |
 |--------|-----|-------------|
-| `GET` | `/api/tasks` | Get all tasks |
-| `GET` | `/api/tasks?status=PENDING` | Filter by status |
+| `GET` | `/api/boards` | Get all boards (ordered) |
+| `GET` | `/api/boards/{id}` | Get single board |
+| `POST` | `/api/boards` | Create board |
+| `PUT` | `/api/boards/{id}` | Update board |
+| `DELETE` | `/api/boards/{id}` | Delete board and its tasks |
+| `GET` | `/api/tasks` | Get all tasks (optional `?boardId=`, `?status=`, newest first) |
+| `GET` | `/api/tasks/stats` | Fast aggregated metrics (pending, in-progress, completed, overdue, total; optional `?boardId=`) |
 | `GET` | `/api/tasks/{id}` | Get single task |
-| `POST` | `/api/tasks` | Create task |
+| `POST` | `/api/tasks` | Create task (auto-resolves default board if omitted) |
 | `PUT` | `/api/tasks/{id}` | Update task |
+| `PATCH` | `/api/tasks/{id}/status?status=...` | Fast single-click status transition |
 | `DELETE` | `/api/tasks/{id}` | Delete task |
-| `GET` | `/api/tasks/search?keyword=...` | Search by title |
+| `GET` | `/api/tasks/search?keyword=...` | Search tasks by title & tags (optional `?boardId=`) |
+| `GET` | `/api/activity-logs` | Get audit activity logs (optional `?boardId=`) |
 
 ### Sample Task JSON
 
@@ -81,13 +88,14 @@ minitrello/
 ├── backend/
 │   ├── src/main/java/com/minitrello/tasktracker/
 │   │   ├── TaskTrackerApplication.java      # Entry point
-│   │   ├── entity/Task.java                 # JPA Entity
-│   │   ├── repository/TaskRepository.java   # Spring Data JPA
-│   │   ├── service/
-│   │   │   ├── TaskService.java             # Business logic
+│   │   ├── entity/                        # JPA Entities (Task, Board, ActivityLog)
+│   │   ├── repository/                    # Spring Data JPA repositories
+│   │   ├── service/                       # Business logic (TaskService, BoardService, etc.)
 │   │   │   └── ResourceNotFoundException.java
 │   │   └── controller/
-│   │       ├── TaskController.java          # REST endpoints
+│   │       ├── TaskController.java          # Task REST endpoints
+│   │       ├── BoardController.java         # Board REST endpoints
+│   │       ├── ActivityLogController.java   # Audit log REST endpoints
 │   │       └── GlobalExceptionHandler.java  # Error handling
 │   └── src/main/resources/
 │       ├── application.properties           # H2 config (default)
@@ -110,9 +118,11 @@ minitrello/
 
 ## 🎨 Features
 
-- ✅ **Full CRUD** — Create, Read, Update, Delete tasks
+- ✅ **Full CRUD** — Create, Read, Update, Delete tasks and boards
 - 🔵 **Status Board** — Pending / In Progress / Completed
-- 🔍 **Search** — Filter tasks by keyword in real-time
+- 🗂️ **Boards Support** — Organize tasks into different boards (Backend API)
+- 📜 **Activity Logs** — Track operations and changes with an audit trail (Backend API)
+- 🔍 **Search** — Filter tasks by keyword and board in real-time
 - 📅 **Due Dates** — With overdue highlighting
 - 📊 **Live Stats** — Header stats update automatically
 - 💎 **Premium UI** — Dark glassmorphism, micro-animations
@@ -122,6 +132,6 @@ minitrello/
 
 ---
 
-## 📝 Resume Description
+<!-- ## 📝 Resume Description
 
-> Built a full-stack Task Tracker (MiniTrello) using **Spring Boot 3** (REST APIs, Spring Data JPA, H2/MySQL) and **React 18** (Vite, Axios, glassmorphism UI), implementing complete CRUD operations, real-time filtering, and server-side validation.
+> Built a full-stack Task Tracker (MiniTrello) using **Spring Boot 3** (REST APIs, Spring Data JPA, H2/MySQL) and **React 18** (Vite, Axios, glassmorphism UI), implementing complete CRUD operations, real-time filtering, and server-side validation. -->

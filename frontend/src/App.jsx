@@ -44,6 +44,12 @@ export default function App() {
             <span className="dot dot-completed" />
             {stats.completed} Completed
           </div>
+          {stats.overdue > 0 && (
+            <div className="stat-pill" style={{ borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}>
+              <span className="dot" style={{ background: '#ef4444', boxShadow: '0 0 6px #ef4444' }} />
+              {stats.overdue} Overdue
+            </div>
+          )}
           <div className="stat-pill" style={{ fontWeight: 700 }}>
             📊 {stats.total} Total
           </div>

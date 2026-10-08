@@ -43,11 +43,30 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle bad argument exceptions (e.g. invalid status or board).
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        Map<String, Object> error = buildErrorBody(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /**
+     * Handle type mismatch errors (e.g. non-numeric ID or invalid enum parameter).
+     */
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        String msg = "Invalid value '" + ex.getValue() + "' for parameter '" + ex.getName() + "'";
+        Map<String, Object> error = buildErrorBody(HttpStatus.BAD_REQUEST, msg);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /**
      * Handle any other unexpected exceptions.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
-        Map<String, Object> error = buildErrorBody(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+        Map<String, Object> error = buildErrorBody(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred: " + ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
