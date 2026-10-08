@@ -132,6 +132,10 @@ minitrello/
 
 ---
 
+<<<<<<< HEAD
 <!-- ## 📝 Resume Description
 
 > Built a full-stack Task Tracker (MiniTrello) using **Spring Boot 3** (REST APIs, Spring Data JPA, H2/MySQL) and **React 18** (Vite, Axios, glassmorphism UI), implementing complete CRUD operations, real-time filtering, and server-side validation. -->
+=======
+
+>>>>>>> 19fd81ed1572ae5e5dbbaa3b77e7788e2cc26301
